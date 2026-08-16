@@ -102,6 +102,11 @@ func (s *Store) PlaceOrder(req PlaceOrderRequest) (Order, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// 幂等校验：相同请求号再次提交时，直接返回首次结果，不重复扣减库存与余额。
+	if existingOrderID, ok := s.requestIndex[req.RequestID]; ok {
+		return s.orders[existingOrderID], nil
+	}
+
 	userBalance, ok := s.balances[req.UserID]
 	if !ok {
 		return Order{}, ErrUserNotFound
