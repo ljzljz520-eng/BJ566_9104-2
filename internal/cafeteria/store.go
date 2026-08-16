@@ -101,6 +101,11 @@ func (s *Store) PlaceOrder(req PlaceOrderRequest) (Order, error) {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if orderID, ok := s.requestIndex[req.RequestID]; ok {
+		if order, exists := s.orders[orderID]; exists {
+			return order, nil
+		}
+	}
 
 	userBalance, ok := s.balances[req.UserID]
 	if !ok {
